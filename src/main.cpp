@@ -1,6 +1,5 @@
-#include "mmh/MMinHook.hpp"
-
-#include <iostream>
+import mmh;
+import std;
 
 namespace {
 __declspec(noinline) void OriginalFunction() {

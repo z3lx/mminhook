@@ -17,5 +17,4 @@ add_executable(mminhook)
 
 file(GLOB_RECURSE SOURCES src/*)
 target_sources(mminhook PRIVATE ${SOURCES})
-target_include_directories(mminhook PRIVATE include)
 target_link_libraries(mminhook PUBLIC minhook)

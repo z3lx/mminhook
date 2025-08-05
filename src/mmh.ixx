@@ -1,36 +1,58 @@
-#pragma once
+module;
 
-#include "mmh/MMinHook.hpp"
-
+#define WIN32_LEAN_AND_MEAN
 #include <MinHook.h>
 
-#include <cstddef>
-#include <mutex>
-#include <stdexcept>
+export module mmh;
 
-namespace mmh {
-namespace detail {
-inline std::mutex mutex {};
-inline size_t referenceCount { 0 };
+export namespace mmh {
+template <typename Ret, typename... Args>
+class MMinHook {
+public:
+    MMinHook(void* target, void* detour, bool enable = false);
+    ~MMinHook() noexcept;
 
-inline void ThrowStatus(const MH_STATUS status) {
+    MMinHook(const MMinHook& other) = delete;
+    MMinHook& operator=(const MMinHook& other) = delete;
+    MMinHook(MMinHook&& other) noexcept;
+    MMinHook& operator=(MMinHook&& other) noexcept;
+
+    [[nodiscard]] bool IsEnabled() const noexcept;
+    void Enable(bool enable);
+
+    Ret CallOriginal(Args... args) const;
+
+private:
+    bool isEnabled;
+    void* target;
+    void* original;
+};
+} // namespace mmh
+
+module :private;
+
+import std;
+
+std::mutex mutex {};
+size_t referenceCount { 0 };
+
+void ThrowStatus(const MH_STATUS status) {
     throw std::runtime_error { MH_StatusToString(status) };
 }
 
-inline void ThrowOnError(const MH_STATUS status) {
+void ThrowOnError(const MH_STATUS status) {
     if (status != MH_OK) {
         ThrowStatus(status);
     }
 }
-} // namespace detail
 
+namespace mmh {
 template <typename Ret, typename... Args>
 MMinHook<Ret, Args...>::MMinHook(
     void* target, void* detour, const bool enable)
     : isEnabled { enable }
     , target { target }
     , original { nullptr } {
-    using namespace detail;
     std::lock_guard lock { mutex };
 
     const auto handleMhError = [](const MH_STATUS status) {
@@ -55,7 +77,6 @@ MMinHook<Ret, Args...>::MMinHook(
 
 template <typename Ret, typename... Args>
 MMinHook<Ret, Args...>::~MMinHook() noexcept {
-    using namespace detail;
     std::lock_guard lock { mutex };
 
     if (target == nullptr) {
@@ -103,7 +124,6 @@ bool MMinHook<Ret, Args...>::IsEnabled() const noexcept {
 
 template <typename Ret, typename... Args>
 void MMinHook<Ret, Args...>::Enable(const bool enable) {
-    using namespace detail;
     if (enable && !isEnabled) {
         ThrowOnError(MH_EnableHook(target));
     } else if (!enable && isEnabled) {
