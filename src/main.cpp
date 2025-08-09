@@ -3,21 +3,36 @@ import std;
 
 namespace {
 __declspec(noinline) void OriginalFunction() {
-    std::cout << "OriginalFunction" << std::endl;
+    std::println("OriginalFunction");
 }
 
 __declspec(noinline) void DetourFunction() {
-    std::cout << "DetourFunction" << std::endl;
+    std::println("DetourFunction");
 }
 } // namespace
 
 int main() {
-    mmh::MMinHook<void> hook {
+    auto expected = mmh::MMinHook<void>::Create(
         OriginalFunction,
         DetourFunction
-    };
+    );
+    if (!expected) {
+        std::println(
+            std::cerr,
+            "Failed to create MMinHook with error: {}",
+            static_cast<int>(expected.error())
+        );
+    }
+    mmh::MMinHook hook = std::move(expected.value());
     OriginalFunction();
-    hook.Enable(true);
+    if (const mmh::Status status = hook.Enable(true);
+        status != mmh::Status::Ok) {
+        std::println(
+            std::cerr,
+            "Failed to enable hook with error: {}",
+            static_cast<int>(status)
+        );
+    }
     OriginalFunction();
     hook.CallOriginal();
     return 0;
