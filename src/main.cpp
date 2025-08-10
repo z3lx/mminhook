@@ -12,26 +12,31 @@ __declspec(noinline) void DetourFunction() {
 } // namespace
 
 int main() {
-    auto expected = mmh::MMinHook<void>::Create(
-        OriginalFunction,
-        DetourFunction
-    );
-    if (!expected) {
+    mmh::MMinHook<void> hook {};
+    if (auto result = mmh::MMinHook<void>::Create(
+            OriginalFunction,
+            DetourFunction
+        );
+        !result) {
         std::println(
             std::cerr,
-            "Failed to create MMinHook with error: {}",
-            static_cast<int>(expected.error())
+            "Failed to create hook with error: {}",
+            static_cast<int>(result.error())
         );
+        return 1;
+    } else {
+        hook = std::move(result.value());
     }
-    mmh::MMinHook hook = std::move(expected.value());
+
     OriginalFunction();
-    if (const mmh::Status status = hook.Enable(true);
-        status != mmh::Status::Ok) {
+    if (const auto result = hook.Enable(true);
+        !result) {
         std::println(
             std::cerr,
             "Failed to enable hook with error: {}",
-            static_cast<int>(status)
+            static_cast<int>(result.error())
         );
+        return 1;
     }
     OriginalFunction();
     hook.CallOriginal();
