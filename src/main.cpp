@@ -12,8 +12,8 @@ __declspec(noinline) void DetourFunction() {
 } // namespace
 
 int main() {
-    mmh::MMinHook<void> hook {};
-    if (auto result = mmh::MMinHook<void>::Create(
+    mmh::Hook<void> hook {};
+    if (auto result = mmh::Hook<void>::Create(
             OriginalFunction,
             DetourFunction
         );

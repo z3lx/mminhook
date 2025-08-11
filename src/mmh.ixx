@@ -9,8 +9,8 @@ export module mmh;
 
 import std;
 
-#include "mmh/MMinHook.hpp"
+#include "mmh/Hook.hpp"
 
 module :private;
 
-#include "mmh/MMinHookImpl.hpp"
+#include "mmh/HookImpl.hpp"

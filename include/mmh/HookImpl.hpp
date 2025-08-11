@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef MMH_MODULE
-#include "mmh/MMinHook.hpp"
+#include "mmh/Hook.hpp"
 
 #include <cstdint>
 #include <expected>
@@ -32,8 +32,8 @@ MMH_INLINE Result InitializeMinHook(const bool initialize) noexcept {
 } // namespace detail
 
 template <typename Ret, typename... Args>
-std::expected<MMinHook<Ret, Args...>, Error>
-MMinHook<Ret, Args...>::Create(
+std::expected<Hook<Ret, Args...>, Error>
+Hook<Ret, Args...>::Create(
     void* target, void* detour, const bool enable) noexcept {
     void* original = nullptr;
     const auto createHook = [=, &original]() -> detail::Result {
@@ -53,20 +53,20 @@ MMinHook<Ret, Args...>::Create(
         detail::InitializeMinHook(false);
         return std::unexpected { result.error() };
     }
-    return MMinHook { target, original, enable };
+    return Hook { target, original, enable };
 }
 
 template <typename Ret, typename... Args>
-MMinHook<Ret, Args...>::MMinHook() noexcept
+Hook<Ret, Args...>::Hook() noexcept
     : target { nullptr }, original { nullptr }, isEnabled { false } {};
 
 template <typename Ret, typename... Args>
-MMinHook<Ret, Args...>::MMinHook(
+Hook<Ret, Args...>::Hook(
     void* target, void* original, const bool isEnabled) noexcept
     : target { target }, original { original }, isEnabled { isEnabled } {}
 
 template <typename Ret, typename... Args>
-MMinHook<Ret, Args...>::~MMinHook() noexcept {
+Hook<Ret, Args...>::~Hook() noexcept {
     if (target == nullptr) {
         return;
     }
@@ -75,7 +75,7 @@ MMinHook<Ret, Args...>::~MMinHook() noexcept {
 }
 
 template <typename Ret, typename... Args>
-MMinHook<Ret, Args...>::MMinHook(MMinHook&& other) noexcept
+Hook<Ret, Args...>::Hook(Hook&& other) noexcept
     : target { other.target }
     , original { other.original }
     , isEnabled { other.isEnabled } {
@@ -85,8 +85,8 @@ MMinHook<Ret, Args...>::MMinHook(MMinHook&& other) noexcept
 }
 
 template <typename Ret, typename... Args>
-MMinHook<Ret, Args...>&
-MMinHook<Ret, Args...>::operator=(MMinHook&& other) noexcept {
+Hook<Ret, Args...>&
+Hook<Ret, Args...>::operator=(Hook&& other) noexcept {
     if (this == &other) {
         return *this;
     }
@@ -100,13 +100,13 @@ MMinHook<Ret, Args...>::operator=(MMinHook&& other) noexcept {
 }
 
 template <typename Ret, typename... Args>
-bool MMinHook<Ret, Args...>::IsEnabled() const noexcept {
+bool Hook<Ret, Args...>::IsEnabled() const noexcept {
     return isEnabled;
 }
 
 template <typename Ret, typename... Args>
 std::expected<void, Error>
-MMinHook<Ret, Args...>::Enable(const bool enable) noexcept {
+Hook<Ret, Args...>::Enable(const bool enable) noexcept {
     if (enable != isEnabled) {
         const detail::Result result = enable
             ? detail::ToResult(MH_EnableHook(target))
@@ -121,7 +121,7 @@ MMinHook<Ret, Args...>::Enable(const bool enable) noexcept {
 
 template <typename Ret, typename... Args>
 std::expected<Ret, Error>
-MMinHook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
+Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
     if (original == nullptr) {
         return std::unexpected { Error::NotCreated };
     }

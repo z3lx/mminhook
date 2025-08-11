@@ -27,18 +27,18 @@ MMH_EXPORT enum class Error : std::int8_t {
 };
 
 MMH_EXPORT template <typename Ret, typename... Args>
-class MMinHook {
+class Hook {
 public:
-    [[nodiscard]] static std::expected<MMinHook, Error>
+    [[nodiscard]] static std::expected<Hook, Error>
     Create(void* target, void* detour, bool enable = false) noexcept;
 
-    MMinHook() noexcept;
-    ~MMinHook() noexcept;
+    Hook() noexcept;
+    ~Hook() noexcept;
 
-    MMinHook(const MMinHook& other) = delete;
-    MMinHook& operator=(const MMinHook& other) = delete;
-    MMinHook(MMinHook&& other) noexcept;
-    MMinHook& operator=(MMinHook&& other) noexcept;
+    Hook(const Hook& other) = delete;
+    Hook& operator=(const Hook& other) = delete;
+    Hook(Hook&& other) noexcept;
+    Hook& operator=(Hook&& other) noexcept;
 
     [[nodiscard]] bool IsEnabled() const noexcept;
     [[nodiscard]] std::expected<void, Error>
@@ -47,7 +47,7 @@ public:
     CallOriginal(Args... args) const noexcept;
 
 private:
-    MMinHook(void* target, void* original, bool isEnabled) noexcept;
+    Hook(void* target, void* original, bool isEnabled) noexcept;
 
     void* target;
     void* original;
@@ -56,5 +56,5 @@ private:
 } // namespace mmh
 
 #ifndef MMH_MODULE
-#include "mmh/MMinHookImpl.hpp"
+#include "mmh/HookImpl.hpp"
 #endif
