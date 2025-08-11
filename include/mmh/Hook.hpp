@@ -1,10 +1,9 @@
 #pragma once
 
 #ifndef MMH_MODULE
-#include <cstdint>
-#include <expected>
+#include "mmh/Error.hpp"
 
-#include <MinHook.h>
+#include <expected>
 
 #define MMH_EXPORT
 #define MMH_INLINE inline
@@ -14,18 +13,6 @@
 #endif
 
 namespace mmh {
-MMH_EXPORT enum class Error : std::int8_t {
-    Unknown = MH_UNKNOWN,
-    AlreadyCreated = MH_ERROR_ALREADY_CREATED,
-    NotCreated = MH_ERROR_NOT_CREATED,
-    NotExecutable = MH_ERROR_NOT_EXECUTABLE,
-    UnsupportedFunction = MH_ERROR_UNSUPPORTED_FUNCTION,
-    MemoryAlloc = MH_ERROR_MEMORY_ALLOC,
-    MemoryProtect = MH_ERROR_MEMORY_PROTECT,
-    ModuleNotFound = MH_ERROR_MODULE_NOT_FOUND,
-    FunctionNotFound = MH_ERROR_FUNCTION_NOT_FOUND
-};
-
 MMH_EXPORT template <typename Ret, typename... Args>
 class Hook {
 public:

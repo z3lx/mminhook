@@ -9,6 +9,7 @@ export module mmh;
 
 import std;
 
+#include "mmh/Error.hpp"
 #include "mmh/Hook.hpp"
 
 module :private;

@@ -1,14 +1,15 @@
 #pragma once
 
 #ifndef MMH_MODULE
+#include "mmh/Error.hpp"
 #include "mmh/Hook.hpp"
+
+#include <MinHook.h>
 
 #include <cstdint>
 #include <expected>
 #include <mutex>
 #include <type_traits>
-
-#include <MinHook.h>
 #endif
 
 namespace mmh {
