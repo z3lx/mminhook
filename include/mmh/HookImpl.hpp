@@ -79,14 +79,14 @@ Hook<Ret, Args...> Hook<Ret, Args...>::Create(
 template <typename Ret, typename... Args>
 Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
     const std::wstring_view moduleName,
-    const std::string_view processName,
+    const std::string_view functionName,
     void* detour,
     const bool enable) noexcept {
     const auto createHook = [=](
         void*& outTarget, void*& outOriginal) -> Result<void> {
         return detail::ToResult(MH_CreateHookApiEx(
             moduleName.data(),
-            processName.data(),
+            functionName.data(),
             detour,
             &outOriginal,
             &outTarget
@@ -98,12 +98,12 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
 template <typename Ret, typename... Args>
 Hook<Ret, Args...> Hook<Ret, Args...>::Create(
     const std::wstring_view moduleName,
-    const std::string_view processName,
+    const std::string_view functionName,
     void* detour,
     const bool enable) {
     return detail::ToException(TryCreate(
         moduleName,
-        processName,
+        functionName,
         detour,
         enable
     ));
@@ -114,15 +114,6 @@ Hook<Ret, Args...>::Hook() noexcept
     : target { nullptr }, original { nullptr }, isEnabled { false } {};
 
 template <typename Ret, typename... Args>
-Hook<Ret, Args...>::~Hook() noexcept {
-    if (target == nullptr) {
-        return;
-    }
-    MH_RemoveHook(target);
-    detail::InitializeMinHook(false);
-}
-
-template <typename Ret, typename... Args>
 Hook<Ret, Args...>::Hook(Hook&& other) noexcept
     : target { other.target }
     , original { other.original }
@@ -130,6 +121,15 @@ Hook<Ret, Args...>::Hook(Hook&& other) noexcept
     other.target = nullptr;
     other.original = nullptr;
     other.isEnabled = false;
+}
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...>::~Hook() noexcept {
+    if (target == nullptr) {
+        return;
+    }
+    MH_RemoveHook(target);
+    detail::InitializeMinHook(false);
 }
 
 template <typename Ret, typename... Args>
