@@ -4,6 +4,7 @@
 #include "mmh/Error.hpp"
 
 #include <expected>
+#include <string_view>
 
 #define MMH_EXPORT
 #else
@@ -11,12 +12,34 @@
 #endif
 
 namespace mmh {
+MMH_EXPORT template <typename Value>
+using Result = std::expected<Value, Error>;
+
 MMH_EXPORT template <typename Ret, typename... Args>
 class Hook {
 public:
-    [[nodiscard]] static std::expected<Hook, Error>
-    TryCreate(void* target, void* detour, bool enable = false) noexcept;
-    static Hook Create(void* target, void* detour, bool enable = false);
+    [[nodiscard]] static Result<Hook> TryCreate(
+        void* target,
+        void* detour,
+        bool enable = false
+    ) noexcept;
+    [[nodiscard]] static Hook Create(
+        void* target,
+        void* detour,
+        bool enable = false
+    );
+    [[nodiscard]] static Result<Hook> TryCreate(
+        std::wstring_view moduleName,
+        std::string_view processName,
+        void* detour,
+        bool enable = false
+    ) noexcept;
+    [[nodiscard]] static Hook Create(
+        std::wstring_view moduleName,
+        std::string_view processName,
+        void* detour,
+        bool enable = false
+    );
 
     Hook() noexcept;
     ~Hook() noexcept;
@@ -27,15 +50,19 @@ public:
     Hook& operator=(Hook&& other) noexcept;
 
     [[nodiscard]] bool IsEnabled() const noexcept;
-    [[nodiscard]] std::expected<void, Error>
-    TryEnable(bool enable) noexcept;
+    [[nodiscard]] Result<void> TryEnable(bool enable) noexcept;
     void Enable(bool enable);
 
-    [[nodiscard]] std::expected<Ret, Error>
-    TryCallOriginal(Args... args) const noexcept;
+    [[nodiscard]] Result<Ret> TryCallOriginal(Args... args) const noexcept;
     Ret CallOriginal(Args... args) const;
 
 private:
+    template <typename CreateHookCallable>
+    static Result<Hook> TryCreateImpl(
+        CreateHookCallable createHookCallable,
+        bool enable
+    ) noexcept;
+
     void* target;
     void* original;
     bool isEnabled;
