@@ -23,5 +23,3 @@ private:
     Error error;
 };
 } // namespace mmh
-
-#include "mmh/ExceptionImpl.hpp"

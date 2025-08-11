@@ -1,8 +1,8 @@
 #pragma once
 
 #ifndef MMH_MODULE
-#include "mmh/Exception.hpp"
 #include "mmh/Error.hpp"
+#include "mmh/Exception.hpp"
 #include "mmh/Hook.hpp"
 
 #include <MinHook.h>
