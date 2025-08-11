@@ -6,10 +6,8 @@
 #include <expected>
 
 #define MMH_EXPORT
-#define MMH_INLINE inline
 #else
 #define MMH_EXPORT export
-#define MMH_INLINE
 #endif
 
 namespace mmh {
@@ -17,7 +15,8 @@ MMH_EXPORT template <typename Ret, typename... Args>
 class Hook {
 public:
     [[nodiscard]] static std::expected<Hook, Error>
-    Create(void* target, void* detour, bool enable = false) noexcept;
+    TryCreate(void* target, void* detour, bool enable = false) noexcept;
+    static Hook Create(void* target, void* detour, bool enable = false);
 
     Hook() noexcept;
     ~Hook() noexcept;
@@ -29,19 +28,18 @@ public:
 
     [[nodiscard]] bool IsEnabled() const noexcept;
     [[nodiscard]] std::expected<void, Error>
-    Enable(bool enable) noexcept;
+    TryEnable(bool enable) noexcept;
+    void Enable(bool enable);
+
     [[nodiscard]] std::expected<Ret, Error>
-    CallOriginal(Args... args) const noexcept;
+    TryCallOriginal(Args... args) const noexcept;
+    Ret CallOriginal(Args... args) const;
 
 private:
-    Hook(void* target, void* original, bool isEnabled) noexcept;
-
     void* target;
     void* original;
     bool isEnabled;
 };
 } // namespace mmh
 
-#ifndef MMH_MODULE
 #include "mmh/HookImpl.hpp"
-#endif

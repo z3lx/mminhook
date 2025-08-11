@@ -10,8 +10,5 @@ export module mmh;
 import std;
 
 #include "mmh/Error.hpp"
+#include "mmh/Exception.hpp"
 #include "mmh/Hook.hpp"
-
-module :private;
-
-#include "mmh/HookImpl.hpp"
