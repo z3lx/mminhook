@@ -14,7 +14,7 @@ __declspec(noinline) void DetourFunction() {
 int main() {
     {
         mmh::Hook<void> hook {};
-        if (auto result = mmh::Hook<void>::TryCreate(
+        if (auto result = mmh::Hook<void>::Create(
                 OriginalFunction,
                 DetourFunction
             );
@@ -30,7 +30,7 @@ int main() {
         }
 
         OriginalFunction();
-        if (const auto result = hook.TryEnable(true);
+        if (const auto result = hook.Enable(true);
             !result) {
             std::println(
                 std::cerr,
@@ -40,19 +40,22 @@ int main() {
             return 1;
         }
         OriginalFunction();
-        hook.TryCallOriginal();
+        hook.CallOriginal();
     }
 
     try {
-        mmh::Hook<void> hook = mmh::Hook<void>::Create(
+        mmh::ex::Hook<void> hookA = mmh::ex::Hook<void>::Create(
             OriginalFunction,
             DetourFunction
         );
+        auto hook = std::move(hookA);
 
         OriginalFunction();
         hook.Enable(true);
         OriginalFunction();
         hook.CallOriginal();
+
+        hookA.CallOriginal();
     } catch (const mmh::Exception& e) {
         std::println(std::cerr, "{}", e.what());
         return 1;

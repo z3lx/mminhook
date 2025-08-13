@@ -2,7 +2,6 @@
 
 #ifndef MMH_MODULE
 #include "mmh/Error.hpp"
-#include "mmh/Exception.hpp"
 #include "mmh/Hook.hpp"
 
 #include <MinHook.h>
@@ -12,7 +11,6 @@
 #include <mutex>
 #include <string_view>
 #include <type_traits>
-#include <utility>
 
 #define MMH_INLINE inline
 #else
@@ -28,18 +26,6 @@ MMH_INLINE Result<void> ToResult(const MH_STATUS status) noexcept {
     return {};
 }
 
-template <typename Value>
-Value ToException(Result<Value>&& result) {
-    if (!result) {
-        throw Exception { result.error() };
-    }
-    if constexpr (std::is_void_v<Value>) {
-        return;
-    } else {
-        return std::move(result.value());
-    }
-}
-
 MMH_INLINE Result<void> InitializeMinHook(const bool initialize) noexcept {
     static std::mutex mutex {};
     static std::size_t referenceCount = 0;
@@ -52,7 +38,7 @@ MMH_INLINE Result<void> InitializeMinHook(const bool initialize) noexcept {
 } // namespace detail
 
 template <typename Ret, typename... Args>
-Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
+Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     void* target, void* detour, const bool enable) noexcept {
     const auto createHook = [=](
         void*& outTarget, void*& outOriginal) -> Result<void> {
@@ -67,17 +53,7 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
 }
 
 template <typename Ret, typename... Args>
-Hook<Ret, Args...> Hook<Ret, Args...>::Create(
-    void* target, void* detour, const bool enable) {
-    return detail::ToException(TryCreate(
-        target,
-        detour,
-        enable
-    ));
-}
-
-template <typename Ret, typename... Args>
-Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
+Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     const std::wstring_view moduleName,
     const std::string_view functionName,
     void* detour,
@@ -93,20 +69,6 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
         ));
     };
     return TryCreateImpl(createHook, enable);
-}
-
-template <typename Ret, typename... Args>
-Hook<Ret, Args...> Hook<Ret, Args...>::Create(
-    const std::wstring_view moduleName,
-    const std::string_view functionName,
-    void* detour,
-    const bool enable) {
-    return detail::ToException(TryCreate(
-        moduleName,
-        functionName,
-        detour,
-        enable
-    ));
 }
 
 template <typename Ret, typename... Args>
@@ -152,7 +114,7 @@ bool Hook<Ret, Args...>::IsEnabled() const noexcept {
 }
 
 template <typename Ret, typename... Args>
-Result<void> Hook<Ret, Args...>::TryEnable(
+Result<void> Hook<Ret, Args...>::Enable(
     const bool enable) noexcept {
     if (enable != isEnabled) {
         const Result<void> result = enable
@@ -167,12 +129,7 @@ Result<void> Hook<Ret, Args...>::TryEnable(
 }
 
 template <typename Ret, typename... Args>
-void Hook<Ret, Args...>::Enable(const bool enable) {
-    detail::ToException(TryEnable(enable));
-}
-
-template <typename Ret, typename... Args>
-Result<Ret> Hook<Ret, Args...>::TryCallOriginal(Args... args) const noexcept {
+Result<Ret> Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
     if (original == nullptr) {
         return std::unexpected { Error::NotCreated };
     }
@@ -183,15 +140,6 @@ Result<Ret> Hook<Ret, Args...>::TryCallOriginal(Args... args) const noexcept {
         return {};
     } else {
         return { func(args...) };
-    }
-}
-
-template <typename Ret, typename... Args>
-Ret Hook<Ret, Args...>::CallOriginal(Args... args) const {
-    if constexpr (std::is_void_v<Ret>) {
-        detail::ToException(TryCallOriginal(args...));
-    } else {
-        return detail::ToException(TryCallOriginal(args...));
     }
 }
 

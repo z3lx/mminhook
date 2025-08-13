@@ -1,0 +1,96 @@
+#pragma once
+
+#ifndef MMH_MODULE
+#include "mmh/Hook.hpp"
+#include "mmh/ex/Exception.hpp"
+#include "mmh/ex/Hook.hpp"
+
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#endif
+
+namespace mmh::ex {
+namespace detail {
+template <typename Value>
+Value ToException(Result<Value>&& result) {
+    if (!result) {
+        throw Exception { result.error() };
+    }
+    if constexpr (std::is_void_v<Value>) {
+        return;
+    } else {
+        return std::move(result.value());
+    }
+}
+} // namespace detail
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...> Hook<Ret, Args...>::Create(
+    void* target, void* detour, const bool enable) {
+    Hook hook {};
+    hook.hook = detail::ToException(mmh::Hook<Ret, Args...>::Create(
+        target,
+        detour,
+        enable
+    ));
+    return hook;
+}
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...> Hook<Ret, Args...>::Create(
+    const std::wstring_view moduleName,
+    const std::string_view functionName,
+    void* detour,
+    const bool enable) {
+    Hook hook {};
+    hook.hook = detail::ToException(mmh::Hook<Ret, Args...>::Create(
+        moduleName,
+        functionName,
+        detour,
+        enable
+    ));
+    return hook;
+}
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...>::Hook() noexcept = default;
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...>::Hook(Hook&& other) noexcept
+    : hook { std::move(other.hook) } {}
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...>::~Hook() noexcept = default;
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...>& Hook<Ret, Args...>::operator=(Hook&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+    hook = std::move(other.hook);
+    return *this;
+}
+
+template <typename Ret, typename... Args>
+bool Hook<Ret, Args...>::IsEnabled() const noexcept {
+    return hook.IsEnabled();
+}
+
+template <typename Ret, typename... Args>
+void Hook<Ret, Args...>::Enable(const bool enable) {
+    detail::ToException(hook.Enable(enable));
+}
+
+template <typename Ret, typename... Args>
+Ret Hook<Ret, Args...>::CallOriginal(Args... args) const {
+    if constexpr (std::is_void_v<Ret>) {
+        detail::ToException(hook.CallOriginal(args...));
+        return;
+    } else {
+        return detail::ToException(hook.CallOriginal(args...));
+    }
+}
+} // namespace mmh::ex
+
+#undef MMH_EXPORT

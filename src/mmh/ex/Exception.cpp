@@ -1,5 +1,5 @@
 #ifndef MMH_MODULE
-#include "mmh/Exception.hpp"
+#include "mmh/ex/Exception.hpp"
 #include "mmh/Error.hpp"
 
 #define WIN32_LEAN_AND_MEAN
