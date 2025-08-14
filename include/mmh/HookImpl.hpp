@@ -49,7 +49,7 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
             &outOriginal
         ));
     };
-    return TryCreateImpl(createHook, enable);
+    return CreateImpl(createHook, enable);
 }
 
 template <typename Ret, typename... Args>
@@ -68,7 +68,7 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
             &outTarget
         ));
     };
-    return TryCreateImpl(createHook, enable);
+    return CreateImpl(createHook, enable);
 }
 
 template <typename Ret, typename... Args>
@@ -145,7 +145,7 @@ Result<Ret> Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
 
 template <typename Ret, typename... Args>
 template <typename CreateHookCallable>
-Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreateImpl(
+Result<Hook<Ret, Args...>> Hook<Ret, Args...>::CreateImpl(
     CreateHookCallable createHookCallable,
     const bool enable) noexcept {
     void* target = nullptr;

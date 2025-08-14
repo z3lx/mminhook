@@ -46,7 +46,7 @@ public:
 
 private:
     template <typename CreateHookCallable>
-    static Result<Hook> TryCreateImpl(
+    static Result<Hook> CreateImpl(
         CreateHookCallable createHookCallable,
         bool enable
     ) noexcept;
