@@ -1,6 +1,5 @@
 #pragma once
 
-#ifndef MMH_MODULE
 #include "mmh/Hook.hpp"
 #include "mmh/ex/Exception.hpp"
 #include "mmh/ex/Hook.hpp"
@@ -8,7 +7,6 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
-#endif
 
 namespace mmh::ex {
 namespace detail {
@@ -92,5 +90,3 @@ Ret Hook<Ret, Args...>::CallOriginal(Args... args) const {
     }
 }
 } // namespace mmh::ex
-
-#undef MMH_EXPORT

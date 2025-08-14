@@ -1,13 +1,13 @@
 #pragma once
 
-#ifndef MMH_MODULE
 #include "mmh/Hook.hpp"
 
 #include <string_view>
 
-#define MMH_EXPORT
-#else
+#ifdef MMH_MODULE
 #define MMH_EXPORT export
+#else
+#define MMH_EXPORT
 #endif
 
 namespace mmh::ex {
@@ -44,5 +44,7 @@ private:
     mmh::Hook<Ret, Args...> hook;
 };
 } // namespace mmh::ex
+
+#undef MMH_EXPORT
 
 #include "mmh/ex/HookImpl.hpp"

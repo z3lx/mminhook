@@ -1,13 +1,13 @@
 #pragma once
 
-#ifndef MMH_MODULE
 #include "mmh/Error.hpp"
 
 #include <exception>
 
-#define MMH_EXPORT
-#else
+#ifdef MMH_MODULE
 #define MMH_EXPORT export
+#else
+#define MMH_EXPORT
 #endif
 
 namespace mmh {
@@ -23,5 +23,7 @@ private:
     Error error;
 };
 } // namespace mmh
+
+#undef MMH_EXPORT
 
 #include "mmh/ex/ExceptionImpl.hpp"

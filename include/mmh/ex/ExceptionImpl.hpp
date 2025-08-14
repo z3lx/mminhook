@@ -1,15 +1,14 @@
 #pragma once
 
-#ifndef MMH_MODULE
 #include "mmh/Error.hpp"
 #include "mmh/ex/Exception.hpp"
 
-#define WIN32_LEAN_AND_MEAN
 #include <MinHook.h>
 
-#define MMH_INLINE inline
-#else
+#ifdef MMH_MODULE
 #define MMH_INLINE
+#else
+#define MMH_INLINE inline
 #endif
 
 namespace mmh {
@@ -27,4 +26,4 @@ MMH_INLINE const char* Exception::what() const noexcept {
 }
 } // namespace mmh
 
-#undef MMH_EXPORT
+#undef MMH_INLINE

@@ -1,6 +1,5 @@
 #pragma once
 
-#ifndef MMH_MODULE
 #include "mmh/Error.hpp"
 #include "mmh/Hook.hpp"
 
@@ -12,9 +11,10 @@
 #include <string_view>
 #include <type_traits>
 
-#define MMH_INLINE inline
-#else
+#ifdef MMH_MODULE
 #define MMH_INLINE
+#else
+#define MMH_INLINE inline
 #endif
 
 namespace mmh {
@@ -173,5 +173,4 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::CreateImpl(
 }
 } // namespace mmh
 
-#undef MMH_EXPORT
 #undef MMH_INLINE
