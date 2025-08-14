@@ -33,21 +33,41 @@ Result<void> InitializeMinHook() noexcept {
         ? (referenceCount++ == 0 ? ToResult<MH_Initialize>() : success)
         : (--referenceCount == 0 ? ToResult<MH_Uninitialize>() : success);
 }
+
+template <typename Ret, typename... Args, typename CreateHookCallable>
+static Result<Hook<Ret, Args...>> CreateImpl(
+    CreateHookCallable createHookCallable,
+    const bool enable) noexcept {
+    Hook<Ret, Args...> hook {};
+    const auto createHook = [&]() -> Result<void> {
+        return createHookCallable(hook);
+    };
+    const auto enableHook = [&]() -> Result<void> {
+        return hook.Enable(enable);
+    };
+    const Result<void> result = detail::InitializeMinHook<true>()
+        .and_then(createHook)
+        .and_then(enableHook);
+    if (!result) {
+        detail::InitializeMinHook<false>();
+        return std::unexpected { result.error() };
+    }
+    return hook;
+}
 } // namespace detail
 
 template <typename Ret, typename... Args>
 Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     void* target, void* detour, const bool enable) noexcept {
-    const auto createHook = [=](
-        void*& outTarget, void*& outOriginal) -> Result<void> {
-        outTarget = target;
+    const auto createHook = [=](Hook& hook) -> Result<void> {
+        hook.target = target;
         return detail::ToResult<MH_CreateHook>(
-            target,
+            hook.target,
             detour,
-            &outOriginal
+            &hook.original
         );
     };
-    return CreateImpl(createHook, enable);
+    return detail::CreateImpl<Ret, Args...>(createHook, enable);
 }
 
 template <typename Ret, typename... Args>
@@ -56,17 +76,16 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     const std::string_view functionName,
     void* detour,
     const bool enable) noexcept {
-    const auto createHook = [=](
-        void*& outTarget, void*& outOriginal) -> Result<void> {
+    const auto createHook = [=](Hook& hook) -> Result<void> {
         return detail::ToResult<MH_CreateHookApiEx>(
             moduleName.data(),
             functionName.data(),
             detour,
-            &outOriginal,
-            &outTarget
+            &hook.original,
+            &hook.target
         );
     };
-    return CreateImpl(createHook, enable);
+    return detail::CreateImpl<Ret, Args...>(createHook, enable);
 }
 
 template <typename Ret, typename... Args>
@@ -139,35 +158,6 @@ Result<Ret> Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
     } else {
         return { func(args...) };
     }
-}
-
-template <typename Ret, typename... Args>
-template <typename CreateHookCallable>
-Result<Hook<Ret, Args...>> Hook<Ret, Args...>::CreateImpl(
-    CreateHookCallable createHookCallable,
-    const bool enable) noexcept {
-    void* target = nullptr;
-    void* original = nullptr;
-    const auto createHook = [&]() -> Result<void> {
-        return createHookCallable(target, original);
-    };
-    const auto enableHook = [=]() -> Result<void> {
-        return enable ?
-            detail::ToResult<MH_EnableHook>(target) :
-            Result<void> {};
-    };
-    const Result<void> result = detail::InitializeMinHook<true>()
-        .and_then(createHook)
-        .and_then(enableHook);
-    if (!result) {
-        detail::InitializeMinHook<false>();
-        return std::unexpected { result.error() };
-    }
-    Hook hook {};
-    hook.target = target;
-    hook.original = original;
-    hook.isEnabled = enable;
-    return hook;
 }
 } // namespace mmh
 

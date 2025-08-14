@@ -43,12 +43,6 @@ public:
     [[nodiscard]] Result<Ret> CallOriginal(Args... args) const noexcept;
 
 private:
-    template <typename CreateHookCallable>
-    static Result<Hook> CreateImpl(
-        CreateHookCallable createHookCallable,
-        bool enable
-    ) noexcept;
-
     void* target;
     void* original;
     bool isEnabled;
