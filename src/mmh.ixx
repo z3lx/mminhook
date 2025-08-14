@@ -11,7 +11,7 @@ module;
 #define WIN32_LEAN_AND_MEAN
 #include <MinHook.h>
 
-#define MMH_MODULE
+#define MMH_EXPORT export
 
 export module mmh;
 

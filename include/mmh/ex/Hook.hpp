@@ -4,9 +4,7 @@
 
 #include <string_view>
 
-#ifdef MMH_MODULE
-#define MMH_EXPORT export
-#else
+#ifndef MMH_EXPORT
 #define MMH_EXPORT
 #endif
 
@@ -44,7 +42,5 @@ private:
     mmh::Hook<Ret, Args...> hook;
 };
 } // namespace mmh::ex
-
-#undef MMH_EXPORT
 
 #include "mmh/ex/HookImpl.hpp"

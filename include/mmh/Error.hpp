@@ -4,9 +4,7 @@
 
 #include <cstdint>
 
-#ifdef MMH_MODULE
-#define MMH_EXPORT export
-#else
+#ifndef MMH_EXPORT
 #define MMH_EXPORT
 #endif
 
@@ -23,5 +21,3 @@ MMH_EXPORT enum class Error : std::int8_t {
     FunctionNotFound = MH_ERROR_FUNCTION_NOT_FOUND
 };
 } // namespace mmh
-
-#undef MMH_EXPORT

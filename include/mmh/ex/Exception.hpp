@@ -4,9 +4,7 @@
 
 #include <exception>
 
-#ifdef MMH_MODULE
-#define MMH_EXPORT export
-#else
+#ifndef MMH_EXPORT
 #define MMH_EXPORT
 #endif
 
@@ -23,7 +21,5 @@ private:
     Error error;
 };
 } // namespace mmh
-
-#undef MMH_EXPORT
 
 #include "mmh/ex/ExceptionImpl.hpp"

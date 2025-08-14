@@ -5,9 +5,7 @@
 #include <expected>
 #include <string_view>
 
-#ifdef MMH_MODULE
-#define MMH_EXPORT export
-#else
+#ifndef MMH_EXPORT
 #define MMH_EXPORT
 #endif
 
@@ -56,7 +54,5 @@ private:
     bool isEnabled;
 };
 } // namespace mmh
-
-#undef MMH_EXPORT
 
 #include "mmh/HookImpl.hpp"
