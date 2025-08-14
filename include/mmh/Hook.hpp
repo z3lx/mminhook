@@ -37,6 +37,11 @@ public:
     Hook& operator=(Hook&& other) noexcept;
     Hook& operator=(const Hook&) = delete;
 
+    [[nodiscard]] void* GetTarget() const noexcept;
+    [[nodiscard]] void* GetDetour() const noexcept;
+    [[nodiscard]] void* GetOriginal() const noexcept;
+
+    [[nodiscard]] bool IsCreated() const noexcept;
     [[nodiscard]] bool IsEnabled() const noexcept;
     [[nodiscard]] Result<void> Enable(bool enable) noexcept;
 
@@ -44,6 +49,7 @@ public:
 
 private:
     void* target;
+    void* detour;
     void* original;
     bool isEnabled;
 };

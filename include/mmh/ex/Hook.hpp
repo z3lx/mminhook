@@ -33,6 +33,11 @@ public:
     Hook& operator=(Hook&& other) noexcept;
     Hook& operator=(const Hook&) = delete;
 
+    [[nodiscard]] void* GetTarget() const noexcept;
+    [[nodiscard]] void* GetDetour() const noexcept;
+    [[nodiscard]] void* GetOriginal() const noexcept;
+
+    [[nodiscard]] bool IsCreated() const noexcept;
     [[nodiscard]] bool IsEnabled() const noexcept;
     void Enable(bool enable);
 

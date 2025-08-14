@@ -61,9 +61,10 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     void* target, void* detour, const bool enable) noexcept {
     const auto createHook = [=](Hook& hook) -> Result<void> {
         hook.target = target;
+        hook.detour = detour;
         return detail::ToResult<MH_CreateHook>(
             hook.target,
-            detour,
+            hook.detour,
             &hook.original
         );
     };
@@ -77,10 +78,11 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     void* detour,
     const bool enable) noexcept {
     const auto createHook = [=](Hook& hook) -> Result<void> {
+        hook.detour = detour;
         return detail::ToResult<MH_CreateHookApiEx>(
             moduleName.data(),
             functionName.data(),
-            detour,
+            hook.detour,
             &hook.original,
             &hook.target
         );
@@ -90,14 +92,19 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
 
 template <typename Ret, typename... Args>
 Hook<Ret, Args...>::Hook() noexcept
-    : target { nullptr }, original { nullptr }, isEnabled { false } {};
+    : target { nullptr }
+    , detour { nullptr }
+    , original { nullptr }
+    , isEnabled { false } {};
 
 template <typename Ret, typename... Args>
 Hook<Ret, Args...>::Hook(Hook&& other) noexcept
     : target { other.target }
+    , detour { other.detour }
     , original { other.original }
     , isEnabled { other.isEnabled } {
     other.target = nullptr;
+    other.detour = nullptr;
     other.original = nullptr;
     other.isEnabled = false;
 }
@@ -126,6 +133,26 @@ Hook<Ret, Args...>& Hook<Ret, Args...>::operator=(Hook&& other) noexcept {
 }
 
 template <typename Ret, typename... Args>
+void* Hook<Ret, Args...>::GetTarget() const noexcept {
+    return target;
+}
+
+template <typename Ret, typename... Args>
+void* Hook<Ret, Args...>::GetDetour() const noexcept {
+    return detour;
+}
+
+template <typename Ret, typename... Args>
+void* Hook<Ret, Args...>::GetOriginal() const noexcept {
+    return original;
+}
+
+template <typename Ret, typename... Args>
+bool Hook<Ret, Args...>::IsCreated() const noexcept {
+    return target != nullptr;
+}
+
+template <typename Ret, typename... Args>
 bool Hook<Ret, Args...>::IsEnabled() const noexcept {
     return isEnabled;
 }
@@ -147,7 +174,7 @@ Result<void> Hook<Ret, Args...>::Enable(
 
 template <typename Ret, typename... Args>
 Result<Ret> Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
-    if (original == nullptr) {
+    if (!IsCreated()) {
         return std::unexpected { Error::NotCreated };
     }
     using FuncType = Ret(*)(Args...);

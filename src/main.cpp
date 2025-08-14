@@ -1,4 +1,6 @@
 import mmh;
+// #include "mmh/Hook.hpp"
+// #include "mmh/ex/Hook.hpp"
 import std;
 
 namespace {
@@ -16,7 +18,8 @@ int main() {
         mmh::Hook<void> hook {};
         if (auto result = mmh::Hook<void>::Create(
                 OriginalFunction,
-                DetourFunction
+                DetourFunction,
+                true
             );
             !result) {
             std::println(

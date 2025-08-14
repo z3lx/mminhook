@@ -76,6 +76,26 @@ Hook<Ret, Args...>& Hook<Ret, Args...>::operator=(Hook&& other) noexcept {
 }
 
 template <typename Ret, typename... Args>
+void* Hook<Ret, Args...>::GetTarget() const noexcept {
+    return hook.GetTarget();
+}
+
+template <typename Ret, typename... Args>
+void* Hook<Ret, Args...>::GetDetour() const noexcept {
+    return hook.GetDetour();
+}
+
+template <typename Ret, typename... Args>
+void* Hook<Ret, Args...>::GetOriginal() const noexcept {
+    return hook.GetOriginal();
+}
+
+template <typename Ret, typename... Args>
+bool Hook<Ret, Args...>::IsCreated() const noexcept {
+    return hook.IsCreated();
+}
+
+template <typename Ret, typename... Args>
 bool Hook<Ret, Args...>::IsEnabled() const noexcept {
     return hook.IsEnabled();
 }
