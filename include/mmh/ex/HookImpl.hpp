@@ -4,6 +4,7 @@
 #include "mmh/ex/Exception.hpp"
 #include "mmh/ex/Hook.hpp"
 
+#include <exception>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -13,7 +14,11 @@ namespace detail {
 template <typename Value>
 Value ToException(Result<Value>&& result) {
     if (!result) {
+#if __cpp_exceptions == 199711
         throw Exception { result.error() };
+#else
+        std::terminate();
+#endif
     }
     if constexpr (std::is_void_v<Value>) {
         return;
