@@ -99,6 +99,11 @@ bool Hook<Ret, Args...>::IsCreated() const noexcept {
 }
 
 template <typename Ret, typename... Args>
+Hook<Ret, Args...>::operator bool() const noexcept {
+    return hook.operator bool();
+}
+
+template <typename Ret, typename... Args>
 bool Hook<Ret, Args...>::IsEnabled() const noexcept {
     return hook.IsEnabled();
 }

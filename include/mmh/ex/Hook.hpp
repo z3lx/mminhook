@@ -35,6 +35,8 @@ public:
     [[nodiscard]] void* GetOriginal() const noexcept;
 
     [[nodiscard]] bool IsCreated() const noexcept;
+    [[nodiscard]] explicit operator bool() const noexcept;
+
     [[nodiscard]] bool IsEnabled() const noexcept;
     void Enable(bool enable);
 
