@@ -3,7 +3,6 @@ module;
 #include <cstdint>
 #include <exception>
 #include <expected>
-#include <mutex>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -11,7 +10,7 @@ module;
 #define WIN32_LEAN_AND_MEAN
 #include <MinHook.h>
 
-#define MMH_EXPORT export
+#define MMH_BUILD_MODULE
 
 export module mmh;
 

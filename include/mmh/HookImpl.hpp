@@ -1,38 +1,19 @@
 #pragma once
 
+#include "mmh/Defines.hpp"
 #include "mmh/Error.hpp"
 #include "mmh/Hook.hpp"
 
 #include <MinHook.h>
 
-#include <cstdint>
 #include <expected>
-#include <mutex>
 #include <string_view>
 #include <type_traits>
-#include <utility>
 
 namespace mmh {
 namespace detail {
-template <auto MinHookFunc, typename... Args>
-Result<void> ToResult(Args&&... args) noexcept {
-    if (const MH_STATUS status = MinHookFunc(std::forward<Args>(args)...);
-        status != MH_OK) {
-        return std::unexpected { static_cast<Error>(status) };
-    }
-    return {};
-}
-
-template <bool Initialize>
-Result<void> InitializeMinHook() noexcept {
-    static std::mutex mutex {};
-    static std::size_t referenceCount = 0;
-    std::lock_guard lock { mutex };
-    constexpr Result<void> success {};
-    return Initialize
-        ? (referenceCount++ == 0 ? ToResult<MH_Initialize>() : success)
-        : (--referenceCount == 0 ? ToResult<MH_Uninitialize>() : success);
-}
+MMH_EXTERN Result<void> ToResult(MH_STATUS status) noexcept;
+MMH_EXTERN Result<void> InitializeMinHook(bool initialize) noexcept;
 
 template <typename Ret, typename... Args, typename CreateHookCallable>
 static Result<Hook<Ret, Args...>> CreateImpl(
@@ -45,11 +26,11 @@ static Result<Hook<Ret, Args...>> CreateImpl(
     const auto enableHook = [&]() -> Result<void> {
         return hook.Enable(enable);
     };
-    const Result<void> result = detail::InitializeMinHook<true>()
+    const Result<void> result = InitializeMinHook(true)
         .and_then(createHook)
         .and_then(enableHook);
     if (!result) {
-        detail::InitializeMinHook<false>();
+        InitializeMinHook(false);
         return std::unexpected { result.error() };
     }
     return hook;
@@ -62,11 +43,11 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     const auto createHook = [=](Hook& hook) -> Result<void> {
         hook.target = target;
         hook.detour = detour;
-        return detail::ToResult<MH_CreateHook>(
+        return detail::ToResult(MH_CreateHook(
             hook.target,
             hook.detour,
             &hook.original
-        );
+        ));
     };
     return detail::CreateImpl<Ret, Args...>(createHook, enable);
 }
@@ -79,13 +60,13 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
     const bool enable) noexcept {
     const auto createHook = [=](Hook& hook) -> Result<void> {
         hook.detour = detour;
-        return detail::ToResult<MH_CreateHookApiEx>(
+        return detail::ToResult(MH_CreateHookApiEx(
             moduleName.data(),
             functionName.data(),
             hook.detour,
             &hook.original,
             &hook.target
-        );
+        ));
     };
     return detail::CreateImpl<Ret, Args...>(createHook, enable);
 }
@@ -115,7 +96,7 @@ Hook<Ret, Args...>::~Hook() noexcept {
         return;
     }
     MH_RemoveHook(target);
-    detail::InitializeMinHook<false>();
+    detail::InitializeMinHook(false);
 }
 
 template <typename Ret, typename... Args>
@@ -162,8 +143,8 @@ Result<void> Hook<Ret, Args...>::Enable(
     const bool enable) noexcept {
     if (enable != isEnabled) {
         const Result<void> result = enable
-            ? detail::ToResult<MH_EnableHook>(target)
-            : detail::ToResult<MH_DisableHook>(target);
+            ? detail::ToResult(MH_EnableHook(target))
+            : detail::ToResult(MH_DisableHook(target));
         if (!result) {
             return result;
         }
@@ -187,5 +168,3 @@ Result<Ret> Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
     }
 }
 } // namespace mmh
-
-#undef MMH_INLINE

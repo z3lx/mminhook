@@ -1,10 +1,13 @@
 #pragma once
 
+#include "mmh/Defines.hpp"
 #include "mmh/Hook.hpp"
 #include "mmh/ex/Exception.hpp"
 #include "mmh/ex/Hook.hpp"
 
+#if !MMH_HAS_EXCEPTIONS
 #include <exception>
+#endif
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -14,7 +17,7 @@ namespace detail {
 template <typename Value>
 Value ToException(Result<Value>&& result) {
     if (!result) {
-#if __cpp_exceptions == 199711
+#if MMH_HAS_EXCEPTIONS
         throw Exception { result.error() };
 #else
         std::terminate();

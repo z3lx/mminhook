@@ -1,15 +1,12 @@
 #pragma once
 
+#include "mmh/Defines.hpp"
 #include "mmh/Error.hpp"
 
 #include <exception>
 
-#ifndef MMH_EXPORT
-#define MMH_EXPORT
-#endif
-
 namespace mmh {
-MMH_EXPORT class Exception final : public std::exception {
+MMH_EXPORT MMH_EXTERN class Exception final : public std::exception {
 public:
     explicit Exception(Error error) noexcept;
     ~Exception() noexcept override;
@@ -21,5 +18,3 @@ private:
     Error error;
 };
 } // namespace mmh
-
-#include "mmh/ex/ExceptionImpl.hpp"

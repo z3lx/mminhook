@@ -1,12 +1,10 @@
 #pragma once
 
+#include "mmh/Defines.hpp"
+
 #include <MinHook.h>
 
 #include <cstdint>
-
-#ifndef MMH_EXPORT
-#define MMH_EXPORT
-#endif
 
 namespace mmh {
 MMH_EXPORT enum class Error : std::int8_t {

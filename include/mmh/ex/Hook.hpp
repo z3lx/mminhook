@@ -1,12 +1,9 @@
 #pragma once
 
+#include "mmh/Defines.hpp"
 #include "mmh/Hook.hpp"
 
 #include <string_view>
-
-#ifndef MMH_EXPORT
-#define MMH_EXPORT
-#endif
 
 namespace mmh::ex {
 MMH_EXPORT template <typename Ret, typename... Args>

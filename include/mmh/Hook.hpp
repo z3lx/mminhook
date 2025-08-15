@@ -1,13 +1,10 @@
 #pragma once
 
+#include "mmh/Defines.hpp"
 #include "mmh/Error.hpp"
 
 #include <expected>
 #include <string_view>
-
-#ifndef MMH_EXPORT
-#define MMH_EXPORT
-#endif
 
 namespace mmh {
 MMH_EXPORT template <typename Value>
