@@ -45,6 +45,7 @@ target_sources(mminhook
         FILES
             src/mmh.ixx
     PRIVATE
+        src/mmh/Error.cpp
         src/mmh/Exception.cpp
         src/mmh/detail/MinHook.cpp
 )
