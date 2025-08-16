@@ -1,20 +1,21 @@
 #pragma once
 
-#include "mmh/Defines.hpp"
 #include "mmh/Error.hpp"
+#include "mmh/Exception.hpp"
 #include "mmh/Hook.hpp"
+#include "mmh/detail/Defines.hpp"
+#include "mmh/detail/MinHook.hpp"
 
-#include <MinHook.h>
-
+#if !MMH_HAS_EXCEPTIONS
+#include <exception>
+#endif
 #include <expected>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 
 namespace mmh {
 namespace detail {
-MMH_EXTERN Result<void> ToResult(MH_STATUS status) noexcept;
-MMH_EXTERN Result<void> InitializeMinHook(bool initialize) noexcept;
-
 template <typename Ret, typename... Args, typename CreateHookCallable>
 static Result<Hook<Ret, Args...>> CreateImpl(
     CreateHookCallable createHookCallable,
@@ -24,51 +25,95 @@ static Result<Hook<Ret, Args...>> CreateImpl(
         return createHookCallable(hook);
     };
     const auto enableHook = [&]() -> Result<void> {
-        return hook.Enable(enable);
+        return hook.TryEnable(enable);
     };
-    const Result<void> result = InitializeMinHook(true)
+    const Result<void> result = MhInitialize(true)
         .and_then(createHook)
         .and_then(enableHook);
     if (!result) {
-        InitializeMinHook(false);
+        MhInitialize(false);
         return std::unexpected { result.error() };
     }
     return hook;
 }
+
+template <typename Value>
+Value ValueOrThrow(Result<Value>&& result) {
+    if (!result) {
+#if MMH_HAS_EXCEPTIONS
+        throw Exception { result.error() };
+#else
+        std::terminate();
+#endif
+    }
+    if constexpr (std::is_void_v<Value>) {
+        return;
+    } else {
+        return std::move(result.value());
+    }
+}
 } // namespace detail
 
 template <typename Ret, typename... Args>
-Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
-    void* target, void* detour, const bool enable) noexcept {
+Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
+    void* target,
+    void* detour,
+    const bool enable) noexcept {
     const auto createHook = [=](Hook& hook) -> Result<void> {
         hook.target = target;
         hook.detour = detour;
-        return detail::ToResult(MH_CreateHook(
+        return detail::MhCreate(
             hook.target,
             hook.detour,
-            &hook.original
-        ));
+            hook.original
+        );
     };
     return detail::CreateImpl<Ret, Args...>(createHook, enable);
 }
 
 template <typename Ret, typename... Args>
-Result<Hook<Ret, Args...>> Hook<Ret, Args...>::Create(
+Hook<Ret, Args...> Hook<Ret, Args...>::Create(
+    void* target,
+    void* detour,
+    const bool enable) {
+    return detail::ValueOrThrow(Hook::TryCreate(
+        target,
+        detour,
+        enable
+    ));
+}
+
+template <typename Ret, typename... Args>
+Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
     const std::wstring_view moduleName,
     const std::string_view functionName,
     void* detour,
     const bool enable) noexcept {
     const auto createHook = [=](Hook& hook) -> Result<void> {
         hook.detour = detour;
-        return detail::ToResult(MH_CreateHookApiEx(
+        return detail::MhCreate(
             moduleName.data(),
             functionName.data(),
             hook.detour,
-            &hook.original,
-            &hook.target
-        ));
+            hook.original,
+            hook.target
+        );
     };
     return detail::CreateImpl<Ret, Args...>(createHook, enable);
+}
+
+template <typename Ret, typename... Args>
+Hook<Ret, Args...> Hook<Ret, Args...>::Create(
+    const std::wstring_view moduleName,
+    const std::string_view functionName,
+    void* detour,
+    const bool enable) {
+    return detail::ValueOrThrow(Hook::TryCreate(
+        moduleName,
+        functionName,
+        detour,
+        enable
+    ));
 }
 
 template <typename Ret, typename... Args>
@@ -92,11 +137,11 @@ Hook<Ret, Args...>::Hook(Hook&& other) noexcept
 
 template <typename Ret, typename... Args>
 Hook<Ret, Args...>::~Hook() noexcept {
-    if (target == nullptr) {
+    if (!IsCreated()) {
         return;
     }
-    MH_RemoveHook(target);
-    detail::InitializeMinHook(false);
+    detail::MhRemove(target);
+    detail::MhInitialize(false);
 }
 
 template <typename Ret, typename... Args>
@@ -130,7 +175,7 @@ void* Hook<Ret, Args...>::GetOriginal() const noexcept {
 
 template <typename Ret, typename... Args>
 bool Hook<Ret, Args...>::IsCreated() const noexcept {
-    return target != nullptr;
+    return original != nullptr;
 }
 
 template <typename Ret, typename... Args>
@@ -144,13 +189,11 @@ bool Hook<Ret, Args...>::IsEnabled() const noexcept {
 }
 
 template <typename Ret, typename... Args>
-Result<void> Hook<Ret, Args...>::Enable(
+Result<void> Hook<Ret, Args...>::TryEnable(
     const bool enable) noexcept {
     if (enable != isEnabled) {
-        const Result<void> result = enable
-            ? detail::ToResult(MH_EnableHook(target))
-            : detail::ToResult(MH_DisableHook(target));
-        if (!result) {
+        if (const Result<void> result = detail::MhEnable(target, enable);
+            !result) {
             return result;
         }
         isEnabled = enable;
@@ -159,7 +202,12 @@ Result<void> Hook<Ret, Args...>::Enable(
 }
 
 template <typename Ret, typename... Args>
-Result<Ret> Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
+void Hook<Ret, Args...>::Enable(const bool enable) {
+    detail::ValueOrThrow(TryEnable(enable));
+}
+
+template <typename Ret, typename... Args>
+Result<Ret> Hook<Ret, Args...>::TryCallOriginal(Args... args) const noexcept {
     if (!IsCreated()) {
         return std::unexpected { Error::NotCreated };
     }
@@ -170,6 +218,16 @@ Result<Ret> Hook<Ret, Args...>::CallOriginal(Args... args) const noexcept {
         return {};
     } else {
         return { func(args...) };
+    }
+}
+
+template <typename Ret, typename... Args>
+Ret Hook<Ret, Args...>::CallOriginal(Args... args) const {
+    if constexpr (std::is_void_v<Ret>) {
+        detail::ValueOrThrow(TryCallOriginal(args...));
+        return;
+    } else {
+        return detail::ValueOrThrow(TryCallOriginal(args...));
     }
 }
 } // namespace mmh

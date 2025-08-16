@@ -1,12 +1,12 @@
 #pragma once
 
-#include "mmh/Defines.hpp"
 #include "mmh/Error.hpp"
+#include "mmh/detail/Defines.hpp"
 
 #include <exception>
 
 namespace mmh {
-MMH_EXPORT MMH_EXTERN class Exception final : public std::exception {
+MMH_EXPORT MMH_EXTERN class MMH_API Exception final : public std::exception {
 public:
     explicit Exception(Error error) noexcept;
     ~Exception() noexcept override;

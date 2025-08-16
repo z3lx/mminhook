@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mmh/detail/GeneratedDefines.hpp"
+
 #ifdef MMH_BUILD_MODULE
 #define MMH_EXPORT export
 #define MMH_EXTERN extern "C++"

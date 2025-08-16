@@ -1,21 +1,19 @@
 #pragma once
 
-#include "mmh/Defines.hpp"
-
-#include <MinHook.h>
+#include "mmh/detail/Defines.hpp"
 
 #include <cstdint>
 
 namespace mmh {
-MMH_EXPORT enum class Error : std::int8_t {
-    Unknown = MH_UNKNOWN,
-    AlreadyCreated = MH_ERROR_ALREADY_CREATED,
-    NotCreated = MH_ERROR_NOT_CREATED,
-    NotExecutable = MH_ERROR_NOT_EXECUTABLE,
-    UnsupportedFunction = MH_ERROR_UNSUPPORTED_FUNCTION,
-    MemoryAlloc = MH_ERROR_MEMORY_ALLOC,
-    MemoryProtect = MH_ERROR_MEMORY_PROTECT,
-    ModuleNotFound = MH_ERROR_MODULE_NOT_FOUND,
-    FunctionNotFound = MH_ERROR_FUNCTION_NOT_FOUND
+MMH_EXPORT enum class Error : std::uint8_t {
+    Unknown,
+    AlreadyCreated,
+    NotCreated,
+    NotExecutable,
+    UnsupportedFunction,
+    MemoryAlloc,
+    MemoryProtect,
+    ModuleNotFound,
+    FunctionNotFound
 };
 } // namespace mmh

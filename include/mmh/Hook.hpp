@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mmh/Defines.hpp"
 #include "mmh/Error.hpp"
+#include "mmh/detail/Defines.hpp"
 
 #include <expected>
 #include <string_view>
@@ -13,17 +13,29 @@ using Result = std::expected<Value, Error>;
 MMH_EXPORT template <typename Ret, typename... Args>
 class Hook {
 public:
-    [[nodiscard]] static Result<Hook> Create(
+    [[nodiscard]] static Result<Hook> TryCreate(
         void* target,
         void* detour,
         bool enable = false
     ) noexcept;
-    [[nodiscard]] static Result<Hook> Create(
+    [[nodiscard]] static Hook Create(
+        void* target,
+        void* detour,
+        bool enable = false
+    );
+
+    [[nodiscard]] static Result<Hook> TryCreate(
         std::wstring_view moduleName,
         std::string_view functionName,
         void* detour,
         bool enable = false
     ) noexcept;
+    [[nodiscard]] static Hook Create(
+        std::wstring_view moduleName,
+        std::string_view functionName,
+        void* detour,
+        bool enable = false
+    );
 
     Hook() noexcept;
     Hook(Hook&& other) noexcept;
@@ -42,9 +54,11 @@ public:
     [[nodiscard]] explicit operator bool() const noexcept;
 
     [[nodiscard]] bool IsEnabled() const noexcept;
-    [[nodiscard]] Result<void> Enable(bool enable) noexcept;
+    [[nodiscard]] Result<void> TryEnable(bool enable) noexcept;
+    void Enable(bool enable);
 
-    [[nodiscard]] Result<Ret> CallOriginal(Args... args) const noexcept;
+    [[nodiscard]] Result<Ret> TryCallOriginal(Args... args) const noexcept;
+    Ret CallOriginal(Args... args) const;
 
 private:
     void* target;
@@ -54,4 +68,4 @@ private:
 };
 } // namespace mmh
 
-#include "mmh/HookImpl.hpp"
+#include "mmh/detail/HookImpl.hpp"
