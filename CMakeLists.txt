@@ -13,7 +13,9 @@ FetchContent_Declare(
     GIT_TAG v1.3.4
     GIT_SHALLOW TRUE
 )
+set(BUILD_SHARED_LIBS FALSE)
 FetchContent_MakeAvailable(minhook)
+unset(BUILD_SHARED_LIBS)
 
 add_library(mminhook)
 set(GENERATED_INCLUDE_DIR
