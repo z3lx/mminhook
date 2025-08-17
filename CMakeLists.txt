@@ -18,6 +18,8 @@ FetchContent_MakeAvailable(minhook)
 unset(BUILD_SHARED_LIBS)
 
 add_library(mminhook)
+add_library(mmh::mmh ALIAS mminhook)
+
 set(GENERATED_INCLUDE_DIR
     "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
@@ -29,6 +31,7 @@ generate_export_header(mminhook
     EXPORT_FILE_NAME "${GENERATED_DEFINES_HPP}"
     EXPORT_MACRO_NAME MMH_API
 )
+
 target_sources(mminhook
     PUBLIC
         FILE_SET HEADERS
@@ -58,6 +61,3 @@ set_target_properties(mminhook PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN TRUE
 )
-
-add_executable(demo src/main.cpp)
-target_link_libraries(demo PRIVATE mminhook)
