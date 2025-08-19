@@ -7,7 +7,7 @@ module;
 #include <type_traits>
 #include <utility>
 
-#define MMH_BUILD_MODULE
+#define MMH_BUILD_MODULES
 
 export module mmh;
 
