@@ -10,15 +10,18 @@
 #include <string_view>
 
 namespace {
+using namespace mmh;
+using namespace mmh::detail;
+
 template <typename... Ignored>
-mmh::detail::VoidResult ToResult(
+VoidResult ToResult(
     const MH_STATUS status,
     const Ignored... ignored) noexcept {
     if (status == MH_OK || ((status == ignored) || ...)) {
         return {};
     }
-    const mmh::Error error = [status]() {
-        using enum mmh::Error;
+    const Error error = [status]() {
+        using enum Error;
         switch (status) {
         case MH_ERROR_ALREADY_CREATED:
             return AlreadyCreated;
@@ -42,10 +45,8 @@ mmh::detail::VoidResult ToResult(
     }();
     return std::unexpected { error };
 }
-} // namespace
 
-namespace mmh::detail {
-VoidResult MhInitialize(const bool initialize) noexcept {
+VoidResult MhInitialize(const bool initialize) noexcept try {
     static std::mutex mutex {};
     static std::size_t referenceCount = 0;
     std::lock_guard lock { mutex };
@@ -56,10 +57,42 @@ VoidResult MhInitialize(const bool initialize) noexcept {
         return ToResult(MH_Uninitialize(), MH_ERROR_NOT_INITIALIZED);
     }
     return {};
+} catch (...) {
+    return std::unexpected { Error::Unknown };
 }
 
-VoidResult MhCreate(void* target, void* detour, void*& outOriginal) noexcept {
-    return ToResult(MH_CreateHook(target, detour, &outOriginal));
+template <typename CreateHookCallable>
+VoidResult MhCreateImpl(
+    CreateHookCallable createHook,
+    void*& target,
+    const bool enable) noexcept {
+    const auto enableHook = [=, &target]() {
+        return MhEnable(target, enable);
+    };
+    const VoidResult result = MhInitialize(true)
+        .and_then(createHook)
+        .and_then(enableHook);
+    if (!result) {
+        MhInitialize(false);
+    }
+    return result;
+}
+} // namespace
+
+namespace mmh::detail {
+VoidResult MhCreate(
+    void* target,
+    void* detour,
+    void*& outOriginal,
+    const bool enable) noexcept {
+    const auto createHook = [=, &outOriginal]() {
+        return ToResult(MH_CreateHook(
+            target,
+            detour,
+            &outOriginal
+        ));
+    };
+    return MhCreateImpl(createHook, target, enable);
 }
 
 VoidResult MhCreate(
@@ -67,14 +100,18 @@ VoidResult MhCreate(
     const std::string_view functionName,
     void* detour,
     void*& outOriginal,
-    void*& outTarget) noexcept {
-    return ToResult(MH_CreateHookApiEx(
-        moduleName.data(),
-        functionName.data(),
-        detour,
-        &outOriginal,
-        &outTarget
-    ));
+    void*& outTarget,
+    const bool enable) noexcept {
+    const auto createHook = [=, &outOriginal, &outTarget]() {
+        return ToResult(MH_CreateHookApiEx(
+            moduleName.data(),
+            functionName.data(),
+            detour,
+            &outOriginal,
+            &outTarget
+        ));
+    };
+    return MhCreateImpl(createHook, outTarget, enable);
 }
 
 VoidResult MhEnable(void* target, const bool enable) noexcept {
@@ -84,6 +121,11 @@ VoidResult MhEnable(void* target, const bool enable) noexcept {
 }
 
 VoidResult MhRemove(void* target) noexcept {
-    return ToResult(MH_RemoveHook(target), MH_ERROR_NOT_CREATED);
+    if (target == nullptr) {
+        return std::unexpected { Error::NotCreated };
+    }
+    return ToResult(MH_RemoveHook(target)).and_then([]() {
+        return MhInitialize(false);
+    });
 }
 } // namespace mmh::detail
