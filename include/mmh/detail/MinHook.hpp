@@ -9,14 +9,11 @@
 namespace mmh::detail {
 using VoidResult = std::expected<void, Error>;
 
-MMH_EXTERN MMH_API VoidResult MhInitialize(
-    bool initialize
-) noexcept;
-
 MMH_EXTERN MMH_API VoidResult MhCreate(
     void* target,
     void* detour,
-    void*& outOriginal
+    void*& outOriginal,
+    bool enable
 ) noexcept;
 
 MMH_EXTERN MMH_API VoidResult MhCreate(
@@ -24,7 +21,8 @@ MMH_EXTERN MMH_API VoidResult MhCreate(
     std::string_view functionName,
     void* detour,
     void*& outOriginal,
-    void*& outTarget
+    void*& outTarget,
+    bool enable
 ) noexcept;
 
 MMH_EXTERN MMH_API VoidResult MhEnable(

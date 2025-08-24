@@ -16,27 +16,6 @@
 
 namespace mmh {
 namespace detail {
-template <typename Ret, typename... Args, typename CreateHookCallable>
-static Result<Hook<Ret, Args...>> CreateImpl(
-    CreateHookCallable createHookCallable,
-    const bool enable) noexcept {
-    Hook<Ret, Args...> hook {};
-    const auto createHook = [&]() -> Result<void> {
-        return createHookCallable(hook);
-    };
-    const auto enableHook = [&]() -> Result<void> {
-        return hook.TryEnable(enable);
-    };
-    const Result<void> result = MhInitialize(true)
-        .and_then(createHook)
-        .and_then(enableHook);
-    if (!result) {
-        MhInitialize(false);
-        return std::unexpected { result.error() };
-    }
-    return hook;
-}
-
 template <typename Value>
 Value ValueOrThrow(Result<Value>&& result) {
     if (!result) {
@@ -59,16 +38,19 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
     void* target,
     void* detour,
     const bool enable) noexcept {
-    const auto createHook = [=](Hook& hook) -> Result<void> {
-        hook.target = target;
-        hook.detour = detour;
-        return detail::MhCreate(
-            hook.target,
-            hook.detour,
-            hook.original
-        );
-    };
-    return detail::CreateImpl<Ret, Args...>(createHook, enable);
+    Hook hook {};
+    hook.target = target;
+    hook.detour = detour;
+    hook.isEnabled = enable;
+    Result<void> result = detail::MhCreate(
+        hook.target,
+        hook.detour,
+        hook.original,
+        hook.isEnabled
+    );
+    return result
+        ? Result<Hook> { std::move(hook) }
+        : std::unexpected { result.error() };
 }
 
 template <typename Ret, typename... Args>
@@ -89,17 +71,20 @@ Result<Hook<Ret, Args...>> Hook<Ret, Args...>::TryCreate(
     const std::string_view functionName,
     void* detour,
     const bool enable) noexcept {
-    const auto createHook = [=](Hook& hook) -> Result<void> {
-        hook.detour = detour;
-        return detail::MhCreate(
-            moduleName.data(),
-            functionName.data(),
-            hook.detour,
-            hook.original,
-            hook.target
-        );
-    };
-    return detail::CreateImpl<Ret, Args...>(createHook, enable);
+    Hook hook {};
+    hook.detour = detour;
+    hook.isEnabled = enable;
+    Result<void> result = detail::MhCreate(
+        moduleName,
+        functionName,
+        hook.detour,
+        hook.original,
+        hook.target,
+        hook.isEnabled
+    );
+    return result
+        ? Result<Hook> { std::move(hook) }
+        : std::unexpected { result.error() };
 }
 
 template <typename Ret, typename... Args>
@@ -137,11 +122,7 @@ Hook<Ret, Args...>::Hook(Hook&& other) noexcept
 
 template <typename Ret, typename... Args>
 Hook<Ret, Args...>::~Hook() noexcept {
-    if (!IsCreated()) {
-        return;
-    }
     detail::MhRemove(target);
-    detail::MhInitialize(false);
 }
 
 template <typename Ret, typename... Args>
@@ -149,6 +130,7 @@ Hook<Ret, Args...>& Hook<Ret, Args...>::operator=(Hook&& other) noexcept {
     if (this == &other) {
         return *this;
     }
+    detail::MhRemove(target);
     target = other.target;
     original = other.original;
     isEnabled = other.isEnabled;
