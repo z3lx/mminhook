@@ -31,29 +31,29 @@ set(BUILD_SHARED_LIBS FALSE)
 FetchContent_MakeAvailable(minhook)
 unset(BUILD_SHARED_LIBS)
 
-set(GENERATED_INCLUDE_DIR
+set(MMH_GENERATED_INCLUDE_DIR
     "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 
-set(GENERATED_DEFINES_HPP
-    "${GENERATED_INCLUDE_DIR}/mmh/detail/GeneratedDefines.hpp"
+set(MMH_GENERATED_DEFINES_HPP
+    "${MMH_GENERATED_INCLUDE_DIR}/mmh/detail/GeneratedDefines.hpp"
 )
 
-set(HEADER_DIRS
+set(MMH_HEADER_DIRS
     include
-    "${GENERATED_INCLUDE_DIR}"
+    "${MMH_GENERATED_INCLUDE_DIR}"
 )
 
-set(HEADER_FILES
+set(MMH_HEADER_FILES
     include/mmh/Error.hpp
     include/mmh/Exception.hpp
     include/mmh/Hook.hpp
     include/mmh/detail/Defines.hpp
     include/mmh/detail/HookImpl.hpp
-    "${GENERATED_DEFINES_HPP}"
+    "${MMH_GENERATED_DEFINES_HPP}"
 )
 
-set(SOURCE_FILES
+set(MMH_SOURCE_FILES
     src/Error.cpp
     src/Exception.cpp
     src/Hook.cpp
@@ -78,7 +78,7 @@ set_target_properties(mminhook PROPERTIES
 
 generate_export_header(mminhook
     BASE_NAME mmh
-    EXPORT_FILE_NAME "${GENERATED_DEFINES_HPP}"
+    EXPORT_FILE_NAME "${MMH_GENERATED_DEFINES_HPP}"
     EXPORT_MACRO_NAME MMH_API
 )
 
@@ -89,19 +89,19 @@ if (MMH_BUILD_MODULES)
             FILES ${MODULE_FILES}
         PRIVATE
             FILE_SET HEADERS
-            BASE_DIRS ${HEADER_DIRS}
-            FILES ${HEADER_FILES}
+            BASE_DIRS ${MMH_HEADER_DIRS}
+            FILES ${MMH_HEADER_FILES}
         PRIVATE
-            ${SOURCE_FILES}
+            ${MMH_SOURCE_FILES}
     )
 else()
     target_sources(mminhook
         PUBLIC
             FILE_SET HEADERS
-            BASE_DIRS ${HEADER_DIRS}
-            FILES ${HEADER_FILES}
+            BASE_DIRS ${MMH_HEADER_DIRS}
+            FILES ${MMH_HEADER_FILES}
         PRIVATE
-            ${SOURCE_FILES}
+            ${MMH_SOURCE_FILES}
     )
 endif()
 
