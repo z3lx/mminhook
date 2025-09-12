@@ -4,7 +4,6 @@
 #include "mmh/Exception.hpp"
 #include "mmh/Hook.hpp"
 #include "mmh/detail/Defines.hpp"
-#include "mmh/detail/MinHook.hpp"
 
 #if !MMH_HAS_EXCEPTIONS
 #include <exception>
@@ -16,6 +15,31 @@
 
 namespace mmh {
 namespace detail {
+MMH_EXTERN MMH_API Result<void> MhCreate(
+    void* target,
+    void* detour,
+    void*& outOriginal,
+    bool enable
+) noexcept;
+
+MMH_EXTERN MMH_API Result<void> MhCreate(
+    std::wstring_view moduleName,
+    std::string_view functionName,
+    void* detour,
+    void*& outOriginal,
+    void*& outTarget,
+    bool enable
+) noexcept;
+
+MMH_EXTERN MMH_API Result<void> MhEnable(
+    void* target,
+    bool enable
+) noexcept;
+
+MMH_EXTERN MMH_API Result<void> MhRemove(
+    void* target
+) noexcept;
+
 template <typename Value>
 Value ValueOrThrow(Result<Value>&& result) {
     if (!result) {
@@ -122,7 +146,7 @@ Hook<Ret, Args...>::Hook(Hook&& other) noexcept
 
 template <typename Ret, typename... Args>
 Hook<Ret, Args...>::~Hook() noexcept {
-    detail::MhRemove(target);
+    const Result<void> ignored = detail::MhRemove(target);
 }
 
 template <typename Ret, typename... Args>
@@ -130,7 +154,7 @@ Hook<Ret, Args...>& Hook<Ret, Args...>::operator=(Hook&& other) noexcept {
     if (this == &other) {
         return *this;
     }
-    detail::MhRemove(target);
+    const Result<void> ignored = detail::MhRemove(target);
     target = other.target;
     original = other.original;
     isEnabled = other.isEnabled;

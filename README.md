@@ -5,7 +5,7 @@ A modern C++23 interface for [MinHook](https://github.com/TsudaKageyu/minhook), 
 MMinHook can be installed via CMake's `FetchContent` module.
 - `BUILD_SHARED_LIBS` is `OFF` by default to build a static library; set to `ON` for a shared library.
 - `MMH_BUILD_MODULES` is `ON` by default to enable module support; set to `OFF` to disable.
-- Requires CMake 3.28.2+ and a C++23 compiler with C++20 modules support for module builds.
+- Requires CMake 3.30+ and a C++23 compiler with C++20 modules support for module builds.
 
 ```cmake
 include(FetchContent)
@@ -13,7 +13,7 @@ include(FetchContent)
 FetchContent_Declare(
     mminhook
     GIT_REPOSITORY https://github.com/z3lx/mminhook.git
-    GIT_TAG 1.0.0
+    GIT_TAG main
     GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(mminhook)
@@ -24,7 +24,7 @@ target_link_libraries(app PRIVATE mmh::mmh)
 
 ## Usage
 
-Check the [header files](include/mmh) for exact function signatures and template parameters, as they are self-documenting, and developers already familiar with MinHook will find them intuitive.
+Check the [header files](include/mmh) containing the public interface for exact function signatures and template parameters, as they are self-documenting, and developers already familiar with MinHook will find them intuitive.
 
 ### Consuming the library
 - If using C++20 modules, import the `mmh` module with `import mmh;`.
@@ -61,7 +61,8 @@ SHORT GetAsyncKeyStateHk(const int vKey) noexcept try {
         std::cout,
         "GetAsyncKeyState called with vKey = 0x{0:02X}, "
         "returned with state = 0x{1:04X}",
-        vKey, state
+        static_cast<unsigned int>(vKey),
+        static_cast<unsigned int>(state)
     );
     return state;
 } catch (...) {
