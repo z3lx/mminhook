@@ -85,7 +85,7 @@ VoidResult MhCreate(
     void* detour,
     void*& outOriginal,
     const bool enable) noexcept {
-    const auto createHook = [=, &outOriginal]() {
+    const auto createHook = [=, &outOriginal] {
         return ToResult(MH_CreateHook(
             target,
             detour,
@@ -102,7 +102,7 @@ VoidResult MhCreate(
     void*& outOriginal,
     void*& outTarget,
     const bool enable) noexcept {
-    const auto createHook = [=, &outOriginal, &outTarget]() {
+    const auto createHook = [=, &outOriginal, &outTarget] {
         return ToResult(MH_CreateHookApiEx(
             moduleName.data(),
             functionName.data(),
@@ -115,6 +115,9 @@ VoidResult MhCreate(
 }
 
 VoidResult MhEnable(void* target, const bool enable) noexcept {
+    if (target == nullptr) {
+        return std::unexpected { Error::NotCreated };
+    }
     return enable
         ? ToResult(MH_EnableHook(target), MH_ERROR_ENABLED)
         : ToResult(MH_DisableHook(target), MH_ERROR_DISABLED);
@@ -124,8 +127,7 @@ VoidResult MhRemove(void* target) noexcept {
     if (target == nullptr) {
         return std::unexpected { Error::NotCreated };
     }
-    return ToResult(MH_RemoveHook(target)).and_then([]() {
-        return MhInitialize(false);
-    });
+    return ToResult(MH_RemoveHook(target))
+        .and_then([] { return MhInitialize(false); });
 }
 } // namespace mmh::detail
