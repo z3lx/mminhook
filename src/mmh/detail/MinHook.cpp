@@ -4,7 +4,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <MinHook.h>
 
-#include <cstdint>
+#include <cstddef>
 #include <expected>
 #include <mutex>
 #include <string_view>
@@ -73,7 +73,7 @@ VoidResult MhCreateImpl(
         .and_then(createHook)
         .and_then(enableHook);
     if (!result) {
-        MhInitialize(false);
+        const VoidResult ignored = MhInitialize(false);
     }
     return result;
 }

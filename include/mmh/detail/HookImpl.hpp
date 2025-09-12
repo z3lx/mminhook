@@ -122,7 +122,7 @@ Hook<Ret, Args...>::Hook(Hook&& other) noexcept
 
 template <typename Ret, typename... Args>
 Hook<Ret, Args...>::~Hook() noexcept {
-    detail::MhRemove(target);
+    const Result<void> ignored = detail::MhRemove(target);
 }
 
 template <typename Ret, typename... Args>
@@ -130,7 +130,7 @@ Hook<Ret, Args...>& Hook<Ret, Args...>::operator=(Hook&& other) noexcept {
     if (this == &other) {
         return *this;
     }
-    detail::MhRemove(target);
+    const Result<void> ignored = detail::MhRemove(target);
     target = other.target;
     original = other.original;
     isEnabled = other.isEnabled;
