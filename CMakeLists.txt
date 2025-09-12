@@ -1,17 +1,21 @@
 cmake_minimum_required(VERSION 3.30)
 
-if (NOT (CMAKE_GENERATOR STREQUAL "Ninja") AND
+option(MMH_BUILD_MODULES "Build mminhook as a C++20 module" ON)
+
+if (MMH_BUILD_MODULES)
+    if (NOT (CMAKE_GENERATOR STREQUAL "Ninja") AND
         NOT (CMAKE_GENERATOR STREQUAL "Ninja Multi-Config"))
-    message(FATAL_ERROR "This project requires the Ninja generator.")
+        message(FATAL_ERROR
+            "This project requires the Ninja generator to build C++20 modules."
+        )
+    endif()
+    # https://github.com/Kitware/CMake/blob/v3.30.0/Help/dev/experimental.rst
+    set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD
+        "0e5b6991-d74f-4b3d-a41c-cf096e0b2508"
+    )
 endif()
 
-# https://github.com/Kitware/CMake/blob/v3.30.0/Help/dev/experimental.rst
-set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
-
-project(mminhook
-    LANGUAGES CXX
-    VERSION 1.0.0
-)
+project(mminhook LANGUAGES CXX)
 
 include(FetchContent)
 include(GenerateExportHeader)
@@ -26,8 +30,6 @@ FetchContent_Declare(
 set(BUILD_SHARED_LIBS FALSE)
 FetchContent_MakeAvailable(minhook)
 unset(BUILD_SHARED_LIBS)
-
-option(MMH_BUILD_MODULES "Build mminhook as a C++20 module" ON)
 
 set(GENERATED_INCLUDE_DIR
     "${CMAKE_CURRENT_BINARY_DIR}/include"
@@ -84,11 +86,12 @@ generate_export_header(mminhook
 if (MMH_BUILD_MODULES)
     target_sources(mminhook
         PUBLIC
+            FILE_SET CXX_MODULES
+            FILES ${MODULE_FILES}
+        PRIVATE
             FILE_SET HEADERS
             BASE_DIRS ${HEADER_DIRS}
             FILES ${HEADER_FILES}
-            FILE_SET CXX_MODULES
-            FILES ${MODULE_FILES}
         PRIVATE
             ${SOURCE_FILES}
     )
