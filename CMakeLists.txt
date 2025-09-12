@@ -50,14 +50,13 @@ set(HEADER_FILES
     include/mmh/Hook.hpp
     include/mmh/detail/Defines.hpp
     include/mmh/detail/HookImpl.hpp
-    include/mmh/detail/MinHook.hpp
     "${GENERATED_DEFINES_HPP}"
 )
 
 set(SOURCE_FILES
-    src/mmh/Error.cpp
-    src/mmh/Exception.cpp
-    src/mmh/detail/MinHook.cpp
+    src/Error.cpp
+    src/Exception.cpp
+    src/Hook.cpp
 )
 
 set(MODULE_FILES

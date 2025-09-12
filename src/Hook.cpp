@@ -1,4 +1,4 @@
-#include "mmh/detail/MinHook.hpp"
+#include "mmh/Hook.hpp"
 #include "mmh/Error.hpp"
 
 #define WIN32_LEAN_AND_MEAN
@@ -14,7 +14,7 @@ using namespace mmh;
 using namespace mmh::detail;
 
 template <typename... Ignored>
-VoidResult ToResult(
+Result<void> ToResult(
     const MH_STATUS status,
     const Ignored... ignored) noexcept {
     if (status == MH_OK || ((status == ignored) || ...)) {
@@ -46,7 +46,7 @@ VoidResult ToResult(
     return std::unexpected { error };
 }
 
-VoidResult MhInitialize(const bool initialize) noexcept try {
+Result<void> MhInitialize(const bool initialize) noexcept try {
     static std::mutex mutex {};
     static std::size_t referenceCount = 0;
     std::lock_guard lock { mutex };
@@ -62,25 +62,25 @@ VoidResult MhInitialize(const bool initialize) noexcept try {
 }
 
 template <typename CreateHookCallable>
-VoidResult MhCreateImpl(
+Result<void> MhCreateImpl(
     CreateHookCallable createHook,
     void*& target,
     const bool enable) noexcept {
     const auto enableHook = [=, &target]() {
         return MhEnable(target, enable);
     };
-    const VoidResult result = MhInitialize(true)
+    const Result<void> result = MhInitialize(true)
         .and_then(createHook)
         .and_then(enableHook);
     if (!result) {
-        const VoidResult ignored = MhInitialize(false);
+        const Result<void> ignored = MhInitialize(false);
     }
     return result;
 }
 } // namespace
 
 namespace mmh::detail {
-VoidResult MhCreate(
+Result<void> MhCreate(
     void* target,
     void* detour,
     void*& outOriginal,
@@ -95,7 +95,7 @@ VoidResult MhCreate(
     return MhCreateImpl(createHook, target, enable);
 }
 
-VoidResult MhCreate(
+Result<void> MhCreate(
     const std::wstring_view moduleName,
     const std::string_view functionName,
     void* detour,
@@ -114,7 +114,7 @@ VoidResult MhCreate(
     return MhCreateImpl(createHook, outTarget, enable);
 }
 
-VoidResult MhEnable(void* target, const bool enable) noexcept {
+Result<void> MhEnable(void* target, const bool enable) noexcept {
     if (target == nullptr) {
         return std::unexpected { Error::NotCreated };
     }
@@ -123,7 +123,7 @@ VoidResult MhEnable(void* target, const bool enable) noexcept {
         : ToResult(MH_DisableHook(target), MH_ERROR_DISABLED);
 }
 
-VoidResult MhRemove(void* target) noexcept {
+Result<void> MhRemove(void* target) noexcept {
     if (target == nullptr) {
         return std::unexpected { Error::NotCreated };
     }
