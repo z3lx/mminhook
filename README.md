@@ -5,7 +5,7 @@ A modern C++23 interface for [MinHook](https://github.com/TsudaKageyu/minhook), 
 MMinHook can be installed via CMake's `FetchContent` module.
 - `BUILD_SHARED_LIBS` is `OFF` by default to build a static library; set to `ON` for a shared library.
 - `MMH_BUILD_MODULES` is `ON` by default to enable module support; set to `OFF` to disable.
-- Requires CMake 3.30+ and a C++23 compiler with C++20 modules support for module builds.
+- Requires CMake 3.28.2+ and a C++23 compiler with C++20 modules support for module builds.
 
 ```cmake
 include(FetchContent)
